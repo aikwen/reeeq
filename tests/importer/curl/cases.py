@@ -102,4 +102,203 @@ CASES = \
             "error": ValueError,
         },
 
+        {
+            "desc": "curl with multiple headers",
+            "input": (
+                "curl 'https://example.com/api/users' "
+                "-X POST "
+                "-H 'Content-Type: application/json' "
+                "-H 'Authorization: Bearer abc123' "
+                "-H 'Accept: application/json'"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com/api/users",
+                "-X",
+                "POST",
+                "-H",
+                "Content-Type: application/json",
+                "-H",
+                "Authorization: Bearer abc123",
+                "-H",
+                "Accept: application/json",
+            ],
+        },
+        {
+            "desc": "curl with json body",
+            "input": (
+                "curl 'https://example.com/api/users' "
+                "-X POST "
+                "-H 'Content-Type: application/json' "
+                '--data-raw \'{"name":"Alice","age":20}\''
+            ),
+            "expected": [
+                "curl",
+                "https://example.com/api/users",
+                "-X",
+                "POST",
+                "-H",
+                "Content-Type: application/json",
+                "--data-raw",
+                '{"name":"Alice","age":20}',
+            ],
+        },
+        {
+            "desc": "curl with duplicate headers",
+            "input": (
+                "curl https://example.com "
+                "-H 'X-Test: first' "
+                "-H 'X-Test: second' "
+                "--compressed"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com",
+                "-H",
+                "X-Test: first",
+                "-H",
+                "X-Test: second",
+                "--compressed",
+            ],
+        },
+        {
+            "desc": "curl with multiline command",
+            "input": (
+                "curl 'https://example.com/api' \\\n"
+                "  -X POST \\\n"
+                "  -H 'Content-Type: application/json' \\\n"
+                "  --data-raw '{\"message\":\"hello world\"}'"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com/api",
+                "-X",
+                "POST",
+                "-H",
+                "Content-Type: application/json",
+                "--data-raw",
+                '{"message":"hello world"}',
+            ],
+        },
+        {
+            "desc": "curl with url query parameters",
+            "input": (
+                "curl 'https://example.com/search?q=hello%20world&page=2&sort=desc' "
+                "-H 'Accept: application/json'"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com/search?q=hello%20world&page=2&sort=desc",
+                "-H",
+                "Accept: application/json",
+            ],
+        },
+        {
+            "desc": "curl with ansi-c header",
+            "input": (
+                "curl https://example.com "
+                "-H $'X-Test: hello\\tworld' "
+                "-X GET"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com",
+                "-H",
+                "X-Test: hello\tworld",
+                "-X",
+                "GET",
+            ],
+        },
+        {
+            "desc": "curl with escaped spaces",
+            "input": (
+                r"curl https://example.com "
+                r"-H X-User:\ Alice "
+                r"-H X-Project:\ reeeq"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com",
+                "-H",
+                "X-User: Alice",
+                "-H",
+                "X-Project: reeeq",
+            ],
+        },
+        {
+            "desc": "curl with mixed quoting and headers",
+            "input": (
+                'curl "https://example.com/"api/users '
+                """-H 'X-Name: '"Alice" """
+                """-H "X-Version: 1.0" """
+                "--location"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com/api/users",
+                "-H",
+                "X-Name: Alice",
+                "-H",
+                "X-Version: 1.0",
+                "--location",
+            ],
+        },
+        {
+            "desc": "curl with empty body",
+            "input": (
+                "curl https://example.com "
+                "-X POST "
+                "--data-raw ''"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com",
+                "-X",
+                "POST",
+                "--data-raw",
+                "",
+            ],
+        },
+        {
+            "desc": "curl with ansi-c body",
+            "input": (
+                "curl https://example.com "
+                "--data-binary $'hello\\nworld\\t!' "
+                "-H 'Content-Type: text/plain'"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com",
+                "--data-binary",
+                "hello\nworld\t!",
+                "-H",
+                "Content-Type: text/plain",
+            ],
+        },
+        {
+            "desc": "curl with comment and continuation",
+            "input": (
+                "curl https://example.com \\\n"
+                "  -X GET\n"
+                "# request comment\n"
+                "-H 'Accept: */*'"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com",
+                "-X",
+                "GET",
+                "-H",
+                "Accept: */*",
+            ],
+        },
+        {
+            "desc": "curl with unclosed header quote",
+            "input": (
+                "curl https://example.com "
+                "-H 'Authorization: Bearer abc123"
+            ),
+            "error": ValueError,
+        },
+
     ]
