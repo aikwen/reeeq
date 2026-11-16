@@ -301,4 +301,210 @@ CASES = \
             "error": ValueError,
         },
 
+        {
+            "desc": "chrome browser headers",
+            "input": (
+                "curl 'https://example.com/api/items?page=1' "
+                "-H 'accept: application/json' "
+                "-H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8' "
+                "-H 'sec-ch-ua: \"Chromium\";v=\"130\", \"Google Chrome\";v=\"130\"' "
+                "-H 'sec-ch-ua-mobile: ?0' "
+                "-H 'sec-fetch-dest: empty' "
+                "-H 'sec-fetch-mode: cors' "
+                "-H 'sec-fetch-site: same-origin' "
+                "--compressed"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com/api/items?page=1",
+                "-H", "accept: application/json",
+                "-H", "accept-language: zh-CN,zh;q=0.9,en;q=0.8",
+                "-H", 'sec-ch-ua: "Chromium";v="130", "Google Chrome";v="130"',
+                "-H", "sec-ch-ua-mobile: ?0",
+                "-H", "sec-fetch-dest: empty",
+                "-H", "sec-fetch-mode: cors",
+                "-H", "sec-fetch-site: same-origin",
+                "--compressed",
+            ],
+        },
+        {
+            "desc": "cookie and bearer token",
+            "input": (
+                "curl 'https://example.com/api/profile' "
+                "-H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.test.signature' "
+                "-H 'Cookie: session=abc123; theme=dark; lang=zh-CN' "
+                "-H 'Accept: application/json' "
+                "--location"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com/api/profile",
+                "-H", "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.test.signature",
+                "-H", "Cookie: session=abc123; theme=dark; lang=zh-CN",
+                "-H", "Accept: application/json",
+                "--location",
+            ],
+        },
+        {
+            "desc": "url encoded form",
+            "input": (
+                "curl 'https://example.com/login' "
+                "-X POST "
+                "-H 'Content-Type: application/x-www-form-urlencoded' "
+                "--data-raw 'username=alice&password=p%40ss%26word&remember=true'"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com/login",
+                "-X", "POST",
+                "-H", "Content-Type: application/x-www-form-urlencoded",
+                "--data-raw", "username=alice&password=p%40ss%26word&remember=true",
+            ],
+        },
+        {
+            "desc": "json patch request",
+            "input": (
+                "curl 'https://example.com/api/users/42' "
+                "-X PATCH "
+                "-H 'Content-Type: application/json' "
+                """--data-raw '{"name":"Alice","roles":["admin","editor"],"active":true}'"""
+            ),
+            "expected": [
+                "curl",
+                "https://example.com/api/users/42",
+                "-X", "PATCH",
+                "-H", "Content-Type: application/json",
+                "--data-raw",
+                '{"name":"Alice","roles":["admin","editor"],"active":true}',
+            ],
+        },
+        {
+            "desc": "firefox style request",
+            "input": (
+                "curl 'https://example.com/api/orders' "
+                "-X PUT "
+                "-H 'User-Agent: Mozilla/5.0 Firefox/159.0' "
+                "-H 'Accept: */*' "
+                "-H 'Origin: https://example.com' "
+                "-H 'Sec-Fetch-Mode: cors' "
+                "-H 'Priority: u=0' "
+                "--data-raw '{\"status\":\"paid\"}'"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com/api/orders",
+                "-X", "PUT",
+                "-H", "User-Agent: Mozilla/5.0 Firefox/159.0",
+                "-H", "Accept: */*",
+                "-H", "Origin: https://example.com",
+                "-H", "Sec-Fetch-Mode: cors",
+                "-H", "Priority: u=0",
+                "--data-raw", '{"status":"paid"}',
+            ],
+        },
+        {
+            "desc": "url with brackets and globoff",
+            "input": (
+                "curl --globoff "
+                "'https://example.com/search?filter[status]=active&filter[sort]=desc' "
+                "-H 'Accept: application/json'"
+            ),
+            "expected": [
+                "curl",
+                "--globoff",
+                "https://example.com/search?filter[status]=active&filter[sort]=desc",
+                "-H", "Accept: application/json",
+            ],
+        },
+
+        {
+            "desc": "json body with escaped double quotes",
+            "input": (
+                'curl "https://example.com/api" '
+                '-H "Content-Type: application/json" '
+                '--data-raw "{\\"name\\":\\"Alice\\",\\"age\\":20}"'
+            ),
+            "expected": [
+                "curl",
+                "https://example.com/api",
+                "-H", "Content-Type: application/json",
+                "--data-raw", '{"name":"Alice","age":20}',
+            ],
+        },
+        {
+            "desc": "single quote inside shell argument",
+            "input": (
+                "curl https://example.com "
+                "-H 'X-Name: Alice'\"'\"'s Book'"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com",
+                "-H", "X-Name: Alice's Book",
+            ],
+        },
+        {
+            "desc": "multiple ansi-c escaped headers",
+            "input": (
+                "curl https://example.com "
+                "-H $'X-Tab: hello\\tworld' "
+                "-H $'X-Quote: it\\'s fine' "
+                "-H $'X-Hex: \\x41\\x42\\x43'"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com",
+                "-H", "X-Tab: hello\tworld",
+                "-H", "X-Quote: it's fine",
+                "-H", "X-Hex: ABC",
+            ],
+        },
+        {
+            "desc": "multiline json with ansi-c quoting",
+            "input": (
+                "curl 'https://example.com/api' \\\n"
+                "  -X POST \\\n"
+                "  -H 'Content-Type: application/json' \\\n"
+                "  --data-binary $'{\\n  \"name\": \"Alice\",\\n  \"age\": 20\\n}'"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com/api",
+                "-X", "POST",
+                "-H", "Content-Type: application/json",
+                "--data-binary",
+                '{\n  "name": "Alice",\n  "age": 20\n}',
+            ],
+        },
+        {
+            "desc": "empty headers and empty body arguments",
+            "input": (
+                "curl https://example.com "
+                "-H '' "
+                "-H 'X-Empty:' "
+                "--data-raw ''"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com",
+                "-H", "",
+                "-H", "X-Empty:",
+                "--data-raw", "",
+            ],
+        },
+        {
+            "desc": "mixed quotes with numeric escapes",
+            "input": (
+                "curl https://example.com "
+                "--data-raw pre$'\\x41\\101\\u0042'post "
+                "-H 'Content-Type: text/plain'"
+            ),
+            "expected": [
+                "curl",
+                "https://example.com",
+                "--data-raw", "preAABpost",
+                "-H", "Content-Type: text/plain",
+            ],
+        },
+
     ]
