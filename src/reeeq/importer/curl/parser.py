@@ -73,10 +73,14 @@ class CurlParser:
 
 
     def parse(self) -> dict:
-        method = ""
-        url = None
-        url_option = False
+        # url, url_explicit
+        url = [None, False]
+        method = None
         headers = []
+
+        use_get = False
+        data_parts = []
+        form_parts = []
 
         options, positionals = self.parse_options()
         for option, arg in options:
@@ -107,17 +111,49 @@ class CurlParser:
                     pass
             # url 相关的参数
             elif option in ("--url",):
-
                 # 如果 url = "" 或者第一次出现 url arg
-                if not url_option:
+                if not url[1]:
                     if arg is None:
                         raise ValueError(f"Option {option!r} requires an argument")
-                    url = arg
-                    url_option = True
+                    url = [arg, True]
 
                 # 已经出现了 --url, 后面的url 都忽略
                 else:
                     pass
-            # 其它参数
+            # 显式 get 参数
+            elif option in ("-G", "--get"):
+                use_get = True
+
+            # data family
+            elif option in (
+                    "-d",
+                    "--data",
+                    "--data-ascii",
+                    "--data-raw",
+                    "--data-binary",
+                    "--data-urlencode",
+            ):
+                if arg is None:
+                    raise ValueError(f"Option {option!r} requires an argument")
+
+                data_parts.append((option, arg))
+            # form 表单
+            elif option in ("-F", "--form"):
+                if arg is None:
+                    raise ValueError(f"Option {option!r} requires an argument")
+
+                name, sep, value = arg.partition("=")
+
+                if not sep:
+                    form_parts.append((arg, ""))
+                else:
+                    # 普通字段：
+                    #   -F "name=kwen"
+                    #
+                    # 文件字段暂不读取，只保留引用：
+                    #   -F "file=@test.png"
+                    form_parts.append((name, value))
+            # 其它
             else:
                 pass
+
