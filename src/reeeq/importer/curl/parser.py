@@ -61,12 +61,18 @@ class CurlParser:
                         if not value:
                             value = self.next_token()
 
+                        if value is None:
+                            raise ValueError(f"Option {name!r} requires an argument")
+
                         options.append((name, value))
                         break
             elif v == 0:
                 options.append((token, None))
             elif v == 1:
-                options.append((token, self.next_token()))
+                arg = self.next_token()
+                if arg is None:
+                    raise ValueError(f"option {token !r} requires an argument")
+                options.append((token, arg))
             else:
                 raise ValueError(f"Unexpected option arity: {v!r} for {token!r}")
         return options, positionals
@@ -86,14 +92,10 @@ class CurlParser:
         for option, arg in options:
             # 如果是method相关的参数
             if option in ("-X", "--request"):
-                if arg is None:
-                    raise ValueError(f"Option {option!r} requires an argument")
                 method = arg
 
             # header 相关的参数
             elif option in  ("-H", "--header"):
-                if arg is None:
-                    raise ValueError(f"Option {option!r} requires an argument")
 
                 # 解析 header
                 header = arg
@@ -110,11 +112,9 @@ class CurlParser:
                 else:
                     pass
             # url 相关的参数
-            elif option in ("--url",):
+            elif option == "--url":
                 # 如果 url = "" 或者第一次出现 url arg
                 if not url[1]:
-                    if arg is None:
-                        raise ValueError(f"Option {option!r} requires an argument")
                     url = [arg, True]
 
                 # 已经出现了 --url, 后面的url 都忽略
@@ -133,14 +133,10 @@ class CurlParser:
                     "--data-binary",
                     "--data-urlencode",
             ):
-                if arg is None:
-                    raise ValueError(f"Option {option!r} requires an argument")
 
                 data_parts.append((option, arg))
             # form 表单
             elif option in ("-F", "--form"):
-                if arg is None:
-                    raise ValueError(f"Option {option!r} requires an argument")
 
                 name, sep, value = arg.partition("=")
 
